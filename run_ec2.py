@@ -3,6 +3,8 @@ import sys
 import time
 import boto.ec2
 import socket
+import fcntl
+import struct
 import re
 import subprocess
 
@@ -21,7 +23,7 @@ def run_ec2():
  )
 
  print 'Getting EC2 instance status'
- for i in range(1,30):
+ for i in range(1,60):
   time.sleep(1)
   if ec2conn.get_all_instance_status():
    break
@@ -44,6 +46,15 @@ def check_port(port):
  except socket.error, e:
   print "Connection to %s on port %s failed: %s" % (public_name, port, e)
   return False
+
+def get_ip_address(ifname):
+ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+ return socket.inet_ntoa(fcntl.ioctl(
+   s.fileno(),
+   0x8915,
+   struct.pack('256s', ifname[:15])
+ )[20:24])
+
 
 ### 
 
@@ -100,5 +111,11 @@ if vpn == 1:
  exit(1)
 else:
  print('VPN connection successfully established')
+
+print "Create file containing SonarQube server IP"
+sonarqube_ip = get_ip_address('tun0')
+file = open("sonarqube_ip","w")
+file.write("SONARQUBE_IP=" + sonarqube_ip)
+file.close()
 
 
