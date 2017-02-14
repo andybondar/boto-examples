@@ -89,7 +89,9 @@ input.close()
 output.close()
 
 print "Run VPN client"
+subprocess.call(["sudo killall openvpn"], shell=True)
 subprocess.call(["sudo openvpn --config client.ovpn --daemon"], shell=True)
+time.sleep(10)
 
 print "Verify VPN connection"
 vpn = subprocess.call(["ip addr list tun0"], shell=True)
