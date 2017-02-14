@@ -4,6 +4,7 @@ import time
 import boto.ec2
 import socket
 import re
+import subprocess
 
 ec2conn = boto.ec2.connect_to_region(os.environ['AWS_REGION'], aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_KEY'])
 
@@ -86,5 +87,16 @@ for line in input:
 
 input.close()
 output.close()
+
+print "Run VPN client"
+subprocess.call(["sudo openvpn --config client.ovpn --daemon"], shell=True)
+
+print "Verify VPN connection"
+vpn = subprocess.call(["ip addr list tun0"], shell=True)
+if vpn == 1:
+ print('VPN connection failed')
+ exit(1)
+else:
+ print('VPN connection successfully established')
 
 
