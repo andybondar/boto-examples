@@ -2,9 +2,12 @@ import os
 import sys
 import time
 import boto.ec2
+import socket
+import re
 
 ec2conn = boto.ec2.connect_to_region(os.environ['AWS_REGION'], aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_KEY'])
 
+### Define functions
 
 def run_ec2():
 
@@ -16,25 +19,32 @@ def run_ec2():
    security_group_ids = [os.environ['SG_ID']]
  )
 
- sys.stdout.write('Getting EC2 instance status')
- sys.stdout.flush()
+ print 'Getting EC2 instance status'
  for i in range(1,30):
-  sys.stdout.write('.')
-  sys.stdout.flush()
   time.sleep(1)
   if ec2conn.get_all_instance_status():
-   print '.'
    break
-
- print '.'
 
  if ec2conn.get_all_instance_status():
   print "Instance is ready"
+  return True
  else:
-  print "Instance never got ready"
-  quit()
- 
- return
+  print "Instance isn't ready"
+  return False
+
+
+def check_port(port):
+ s = socket.socket()
+ print "Attempting to connect to %s on port %s" % (public_name, port)
+ try:
+  s.connect((public_name, port))
+  print "Connected to %s on port %s" % (public_name, port)
+  return True
+ except socket.error, e:
+  print "Connection to %s on port %s failed: %s" % (public_name, port, e)
+  return False
+
+### 
 
 ## Run EC2 instance
 
@@ -42,7 +52,12 @@ if ec2conn.get_all_instance_status():
  print('OpenVPN Server is already running...')
 else:
  print('Start OpenVPN Server...')
- run_ec2()
+ ec2_result = run_ec2()
+ if ec2_result:
+  print('OpenVPN Server is running')
+ else:
+  print('OpenVPN Server failed to start for some reason')
+  exit(1)
 
 
 # Get OpenVPN Server IP addresses
@@ -53,4 +68,23 @@ private_ip = ec2conn.get_all_instances(instance_ids=[ec2_id])[0].instances[0].pr
 
 print "FQDN: " + public_name
 print "Private IP: " + private_ip
+
+# Check that port 443 is available
+
+as_result = check_port(port=443)
+if as_result:
+ print('OpenVPN Server is accessible')
+else:
+ print('OpenVPN Server is not accessible')
+ exit(1)
+
+print "Create new client.ovpn file"
+input = open("client.ovpn.origin","r")
+output = open("client.ovpn","w")
+for line in input:
+ output.write(re.sub('openvpnas_hostname', public_name, line))
+
+input.close()
+output.close()
+
 
