@@ -3,8 +3,6 @@ import sys
 import time
 import boto.ec2
 
-service_port=2022
-
 ec2conn = boto.ec2.connect_to_region(os.environ['AWS_REGION'], aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_KEY'])
 
 
@@ -37,12 +35,6 @@ def run_ec2():
   quit()
  
  return
-
-def check_port(hostname,port):
- sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
- result = sock.connect_ex((hostname,port))
- return result
-
 
 ## Run EC2 instance
 
