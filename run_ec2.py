@@ -38,6 +38,7 @@ def run_ec2():
 
 def check_port(port):
  s = socket.socket()
+ time.sleep(60)
  print "Attempting to connect to %s on port %s" % (public_name, port)
  try:
   s.connect((public_name, port))
