@@ -56,7 +56,7 @@ def get_ip_address(ifname):
    struct.pack('256s', ifname[:15])
  )[20:24])
 
-def add_hostname(vpn_ip)
+def add_hostname(vpn_ip):
  ssh = paramiko.SSHClient()
  ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
  hostname = os.environ['SONARQUBE_HOSTNAME']
