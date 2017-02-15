@@ -7,6 +7,7 @@ import fcntl
 import struct
 import re
 import subprocess
+import paramiko
 
 ec2conn = boto.ec2.connect_to_region(os.environ['AWS_REGION'], aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'], aws_secret_access_key=os.environ['AWS_SECRET_KEY'])
 
@@ -38,7 +39,6 @@ def run_ec2():
 
 def check_port(port):
  s = socket.socket()
- time.sleep(60)
  print "Attempting to connect to %s on port %s" % (public_name, port)
  try:
   s.connect((public_name, port))
@@ -56,6 +56,19 @@ def get_ip_address(ifname):
    struct.pack('256s', ifname[:15])
  )[20:24])
 
+def add_hostname(vpn_ip)
+ ssh = paramiko.SSHClient()
+ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+ hostname = os.environ['SONARQUBE_HOSTNAME']
+ user = os.environ['OPENVPN_USERNAME']
+ filename = os.environ['KEY_FILENAME']
+ ssh.connect(public_name, username=user, key_filename=filename)
+ stdin, stdout, stderr = ssh.exec_command("sudo cp /etc/hosts.orig /etc/hosts")
+ print stdout.readlines()
+ stdin, stdout, stderr = ssh.exec_command("echo '" + vpn_ip + " " + hostname + "' | sudo tee -a /etc/hosts > /dev/null")
+ print stdout.readlines()
+ stdin, stdout, stderr = ssh.exec_command("curl -I http://" + hostname + ":9000")
+ print stdout.readlines()
 
 ### 
 
@@ -113,10 +126,10 @@ if vpn == 1:
 else:
  print('VPN connection successfully established')
 
-print "Create file containing SonarQube server IP"
+print "Get SonarQube server IP accessible from VPC"
 sonarqube_ip = get_ip_address('tun0')
-file = open("sonarqube_ip","w")
-file.write("SONARQUBE_IP=" + sonarqube_ip)
-file.close()
+print "SonarQube Server IP: " + sonarqube_ip
 
+print "Add SonarQube Server hostname - IP pair to /etc/hosts"
+add_hostname(vpn_ip = sonarqube_ip)
 
