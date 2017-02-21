@@ -72,7 +72,17 @@ def add_hostname(vpn_ip):
 
 ### 
 
-## Run EC2 instance
+# Check if VPN connection is established
+
+print "Verify VPN connection"
+vpn = subprocess.call(["ip addr list tun0"], shell=True)
+if vpn == 1:
+ print('VPN connection is established. It\'s nothing to do here.')
+ exit(0)
+else:
+ print('VPN connection IS NOT established. Let\'s move on.')
+
+## Run EC2 instance if it is not running so far
 
 if ec2conn.get_all_instance_status():
  print('OpenVPN Server is already running...')
