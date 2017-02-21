@@ -76,7 +76,7 @@ def add_hostname(vpn_ip):
 
 print "Verify VPN connection"
 vpn = subprocess.call(["ip addr list tun0"], shell=True)
-if vpn == 1:
+if vpn == 0:
  print('VPN connection is established. It\'s nothing to do here.')
  exit(0)
 else:
